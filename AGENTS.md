@@ -1,14 +1,14 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `main.ts` hosts the Hono app; keep route wiring here and extract logic into modules under `routes/` or `lib/` before importing back.
-- `deno.json` defines tasks/import maps and `deno.lock` pins remote dependencies; update both when adding libs or permissions via `deno cache main.ts`.
+- `src/server.ts` hosts the Hono app; keep route wiring here and extract logic into modules under `routes/` or `lib/` before importing back.
+- `deno.json` defines tasks/import maps and `deno.lock` pins remote dependencies; update both when adding libs or permissions via `deno cache src/server.ts`.
 - Tests can sit beside the source as `feature_test.ts` or live in a top-level `tests/` that mirrors the runtime structure.
 
 ## Build, Test, and Development Commands
 - `deno task start` bootstraps the server with `--allow-net` for local development.
-- `deno fmt main.ts lib/**/*.ts routes/**/*.ts tests/**/*.ts` applies consistent formatting; omit globs that do not exist yet.
-- `deno lint` surfaces common mistakes, while `deno check main.ts` runs a fast type-only pass for CI.
+- `deno fmt start.ts src/**/*.ts lib/**/*.ts routes/**/*.ts tests/**/*.ts` applies consistent formatting; omit globs that do not exist yet.
+- `deno lint` surfaces common mistakes, while `deno check src/server.ts` runs a fast type-only pass for CI.
 - `deno test --allow-net --coverage=coverage` executes the suite and leaves LCOV data in `coverage/`; inspect with `deno coverage coverage --lcov`.
 
 ## Coding Style & Naming Conventions

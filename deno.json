@@ -6,7 +6,7 @@
     "std/assert": "jsr:@std/assert@1.0.7"
   },
   "tasks": {
-    "start": "deno run --allow-net --allow-run main.ts"
+    "start": "deno run --allow-net --allow-run start.ts"
   },
   "nodeModulesDir": "auto",
   "compilerOptions": {

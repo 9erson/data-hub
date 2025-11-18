@@ -30,11 +30,17 @@ export function createServer(): OpenAPIHono {
   return app;
 }
 
-export function startServer(port: number = 8000): void {
+export function startServer(port: number = 8765): void {
   const app = createServer();
   console.log(`🚀 Server starting on http://localhost:${port}`);
-  Deno.serve(app.fetch);
+  Deno.serve({ port }, app.fetch);
 }
 
 // Export the app for testing
 export const app = createServer();
+
+// Start server if this file is run directly
+if (import.meta.main) {
+  const port = Number(Deno.env.get("PORT")) || 8765;
+  startServer(port);
+}

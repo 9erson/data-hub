@@ -42,7 +42,7 @@ async function startApp(): Promise<void> {
   
   // Start the main app by spawning it as a subprocess
   const startCmd = new Deno.Command("deno", {
-    args: ["run", "--allow-net", "--allow-env", "main.ts"],
+    args: ["run", "--allow-net", "--allow-env", "src/server.ts"],
     stdout: "inherit",
     stderr: "inherit",
     env: {
