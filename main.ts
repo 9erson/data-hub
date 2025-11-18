@@ -74,4 +74,39 @@ app.get("/api/github/:owner/repos", async (c) => {
   }
 });
 
+app.get("/api/github/:owner/repos/:repo", async (c) => {
+  const owner = c.req.param("owner");
+  const repo = c.req.param("repo");
+
+  try {
+    const cmd = new Deno.Command("gh", {
+      args: ["api", `repos/${owner}/${repo}`],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { code, stdout, stderr } = await cmd.output();
+
+    if (code !== 0) {
+      return c.json({
+        error: "GitHub API request failed",
+        details: new TextDecoder().decode(stderr),
+      }, 500);
+    }
+
+    const data = new TextDecoder().decode(stdout);
+    const repoData = JSON.parse(data);
+
+    // Remove owner property from repo data
+    const { owner: _owner, ...repoWithoutOwner } = repoData;
+
+    return c.json(repoWithoutOwner);
+  } catch (error) {
+    return c.json({
+      error: "Failed to execute GitHub CLI",
+      details: error.message,
+    }, 500);
+  }
+});
+
 Deno.serve(app.fetch);
