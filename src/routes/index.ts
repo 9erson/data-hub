@@ -5,11 +5,13 @@ import {
   handleGetRepo,
   handleGetRepoBranches,
   handleGetRepoPulls,
+  handleGetRepoPull,
   getUserRoute,
   getUserReposRoute,
   getRepoRoute,
   getRepoBranchesRoute,
   getRepoPullsRoute,
+  getRepoPullRoute,
 } from './github.ts';
 import { buildGreeting } from '../../lib/greetings.ts';
 
@@ -28,4 +30,5 @@ export function setupRoutes(app: any) {
   app.openapi(getRepoRoute, handleGetRepo);
   app.openapi(getRepoBranchesRoute, handleGetRepoBranches);
   app.openapi(getRepoPullsRoute, handleGetRepoPulls);
+  app.openapi(getRepoPullRoute, handleGetRepoPull);
 }
