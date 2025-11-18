@@ -38,9 +38,3 @@ export function startServer(port: number = 8765): void {
 
 // Export the app for testing
 export const app = createServer();
-
-// Start server if this file is run directly
-if (import.meta.main) {
-  const port = Number(Deno.env.get("PORT")) || 8765;
-  startServer(port);
-}

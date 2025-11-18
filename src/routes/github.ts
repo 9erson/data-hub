@@ -83,6 +83,17 @@ const RepoParamsSchema = OwnerParamsSchema.extend({
   }),
 });
 
+const PrParamsSchema = RepoParamsSchema.extend({
+  pr_number: z.string().openapi({
+    param: {
+      name: "pr_number",
+      in: "path",
+    },
+    example: "123",
+    description: "Pull request number",
+  }),
+});
+
 const GitHubErrorSchema = z.object({
   error: z.string().openapi({
     example: "GitHub API request failed",
@@ -201,6 +212,26 @@ export const getRepoPullsRoute = createRoute({
   },
 });
 
+export const getRepoPullRoute = createRoute({
+  method: "get",
+  path: "/api/github/{owner}/repos/{repo}/prs/{pr_number}",
+  tags: ["GitHub"],
+  request: {
+    params: PrParamsSchema,
+  },
+  responses: {
+    200: {
+      description: "Details for a specific pull request",
+      content: {
+        "application/json": {
+          schema: GitHubPullRequestSchema,
+        },
+      },
+    },
+    500: errorResponse,
+  },
+});
+
 const respondWithGitHubError = (c: Context, error: unknown) => {
   if (error instanceof GitHubRequestError) {
     return c.json({
@@ -219,7 +250,22 @@ export function handleGetUser(c: Context) {
   const { owner } = c.req.valid("param");
 
   return fetchGitHub(`users/${owner}`)
-    .then(data => c.json(data))
+    .then(data => {
+      // Validate the response against the schema
+      const result = GitHubUserSchema.safeParse(data);
+      if (!result.success) {
+        const errorDetails = result.error?.issues?.map(e => {
+          const path = e.path && e.path.length > 0 ? e.path.join('.') : 'root';
+          return `${path}: ${e.message}`;
+        }).join(', ') || result.error?.message || 'Validation failed';
+        
+        throw new GitHubRequestError(
+          "GitHub API request failed",
+          errorDetails
+        );
+      }
+      return c.json(data);
+    })
     .catch(error => respondWithGitHubError(c, error));
 }
 
@@ -260,6 +306,14 @@ export function handleGetRepoPulls(c: Context) {
   const { owner, repo } = c.req.valid("param");
 
   return fetchGitHub(`repos/${owner}/${repo}/pulls`)
+    .then(data => c.json(data))
+    .catch(error => respondWithGitHubError(c, error));
+}
+
+export function handleGetRepoPull(c: Context) {
+  const { owner, repo, pr_number } = c.req.valid("param");
+
+  return fetchGitHub(`repos/${owner}/${repo}/pulls/${pr_number}`)
     .then(data => c.json(data))
     .catch(error => respondWithGitHubError(c, error));
 }

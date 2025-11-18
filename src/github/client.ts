@@ -11,6 +11,14 @@ export class GitHubRequestError extends Error {
 }
 
 export async function fetchGitHub<T = unknown>(endpoint: string): Promise<T> {
+  // Check if Deno.Command is available
+  if (typeof Deno === 'undefined' || !Deno.Command) {
+    throw new GitHubRequestError(
+      "GitHub CLI not available",
+      "Deno.Command is required to query the GitHub API via the CLI."
+    );
+  }
+
   try {
     const cmd = new Deno.Command("gh", {
       args: ["api", endpoint],
