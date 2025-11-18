@@ -6,7 +6,7 @@
 - Tests can sit beside the source as `feature_test.ts` or live in a top-level `tests/` that mirrors the runtime structure.
 
 ## Build, Test, and Development Commands
-- `deno task start` bootstraps the server on port 8765, automatically killing any existing process on that port.
+- `deno task start` bootstraps the server with `--allow-net` for local development.
 - `deno fmt main.ts lib/**/*.ts routes/**/*.ts tests/**/*.ts` applies consistent formatting; omit globs that do not exist yet.
 - `deno lint` surfaces common mistakes, while `deno check main.ts` runs a fast type-only pass for CI.
 - `deno test --allow-net --coverage=coverage` executes the suite and leaves LCOV data in `coverage/`; inspect with `deno coverage coverage --lcov`.

@@ -1,4 +1,4 @@
-import { app } from "../main";
+import { app } from "../src/server.ts";
 
 type CommandResponse = {
   code?: number;
@@ -157,6 +157,22 @@ describe("main routes", () => {
     expect(payload[0].owner).toBeUndefined();
   });
 
+  it("handles repo list CLI failures", async () => {
+    installDenoCommandStub({
+      "users/octocat/repos": {
+        code: 1,
+        stderr: "upstream error",
+      },
+    });
+
+    const response = await app.request("/api/github/octocat/repos");
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "GitHub API request failed",
+      details: "upstream error",
+    });
+  });
+
   it("handles unexpected CLI execution failures", async () => {
     installDenoCommandStub({
       "users/octocat": {
@@ -192,6 +208,22 @@ describe("main routes", () => {
     expect(payload.owner).toBeUndefined();
   });
 
+  it("handles repo detail CLI failures", async () => {
+    installDenoCommandStub({
+      "repos/octocat/alpha": {
+        code: 1,
+        stderr: "missing",
+      },
+    });
+
+    const response = await app.request("/api/github/octocat/repos/alpha");
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "GitHub API request failed",
+      details: "missing",
+    });
+  });
+
   it("returns CLI output for branches", async () => {
     installDenoCommandStub({
       "repos/octocat/alpha/branches": {
@@ -216,6 +248,24 @@ describe("main routes", () => {
     await expect(response.json()).resolves.toEqual([
       expect.objectContaining({ name: "main" }),
     ]);
+  });
+
+  it("handles branch CLI failures", async () => {
+    installDenoCommandStub({
+      "repos/octocat/alpha/branches": {
+        code: 1,
+        stderr: "branch failure",
+      },
+    });
+
+    const response = await app.request(
+      "/api/github/octocat/repos/alpha/branches",
+    );
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "GitHub API request failed",
+      details: "branch failure",
+    });
   });
 
   it("returns CLI output for pull requests", async () => {
@@ -243,6 +293,63 @@ describe("main routes", () => {
     await expect(response.json()).resolves.toEqual([
       expect.objectContaining({ state: "open", title: "Update docs" }),
     ]);
+  });
+
+  it("returns CLI output for a single pull request", async () => {
+    installDenoCommandStub({
+      "repos/octocat/alpha/pulls/5": {
+        code: 0,
+        data: {
+          id: 99,
+          number: 5,
+          state: "open",
+          title: "Update docs",
+          html_url: "https://github.com/octocat/alpha/pull/5",
+          user: {
+            login: "hubot",
+            id: 2,
+          },
+        },
+      },
+    });
+
+    const response = await app.request("/api/github/octocat/repos/alpha/prs/5");
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual(
+      expect.objectContaining({ number: 5, state: "open" }),
+    );
+  });
+
+  it("handles pull request CLI failures", async () => {
+    installDenoCommandStub({
+      "repos/octocat/alpha/pulls": {
+        code: 1,
+        stderr: "pulls error",
+      },
+    });
+
+    const response = await app.request("/api/github/octocat/repos/alpha/prs");
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "GitHub API request failed",
+      details: "pulls error",
+    });
+  });
+
+  it("handles single pull request CLI failures", async () => {
+    installDenoCommandStub({
+      "repos/octocat/alpha/pulls/5": {
+        code: 1,
+        stderr: "pr error",
+      },
+    });
+
+    const response = await app.request("/api/github/octocat/repos/alpha/prs/5");
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "GitHub API request failed",
+      details: "pr error",
+    });
   });
 
   it("reports when the GitHub CLI is unavailable", async () => {

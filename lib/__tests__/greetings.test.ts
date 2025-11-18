@@ -1,4 +1,4 @@
-import { buildGreeting, DEFAULT_GREETING } from "../greetings";
+import { buildGreeting, DEFAULT_GREETING } from "../greetings.ts";
 
 describe("buildGreeting", () => {
   it("returns default greeting when no name is provided", () => {
