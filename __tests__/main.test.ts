@@ -5,7 +5,7 @@ type CommandResponse = {
   data?: unknown;
   raw?: string;
   stderr?: string;
-  throws?: string;
+  throws?: string | { nonError: boolean; message: string };
 };
 
 const encoder = new TextEncoder();
@@ -26,6 +26,10 @@ const installDenoCommandStub = (responses: Record<string, CommandResponse>) => {
       }
 
       if (response.throws) {
+        if (typeof response.throws === 'object' && response.throws.nonError) {
+          // Throw a non-Error object
+          throw response.throws.message;
+        }
         throw new Error(response.throws);
       }
 
@@ -361,5 +365,51 @@ describe("main routes", () => {
       error: "GitHub CLI not available",
       details: "Deno.Command is required to query the GitHub API via the CLI.",
     });
+  });
+
+  it("serves the OpenAPI documentation endpoint", async () => {
+    const response = await app.request("/doc");
+    expect(response.status).toBe(200);
+    const doc = await response.json();
+    expect(doc).toHaveProperty("openapi");
+    expect(doc).toHaveProperty("info");
+    expect(doc.info.title).toBe("Data Hub API");
+  });
+
+  it("serves the Swagger UI docs page", async () => {
+    const response = await app.request("/docs");
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("swagger-ui");
+  });
+
+  it("handles CLI failures with empty stderr", async () => {
+    installDenoCommandStub({
+      "users/testuser": {
+        code: 1,
+        stderr: "",
+      },
+    });
+
+    const response = await app.request("/api/github/testuser");
+    expect(response.status).toBe(500);
+    const payload = await response.json();
+    expect(payload.error).toBe("GitHub API request failed");
+    // When stderr is empty, details should be undefined
+    expect(payload.details).toBeUndefined();
+  });
+
+  it("handles non-Error thrown objects from CLI", async () => {
+    installDenoCommandStub({
+      "users/testuser": {
+        throws: { nonError: true, message: "String error message" },
+      },
+    });
+
+    const response = await app.request("/api/github/testuser");
+    expect(response.status).toBe(500);
+    const payload = await response.json();
+    expect(payload.error).toBe("Failed to execute GitHub CLI");
+    expect(payload.details).toBe("String error message");
   });
 });
