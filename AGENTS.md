@@ -29,3 +29,7 @@
 ## Security & Configuration Tips
 - Start procs with the minimal permission flags; only add `--allow-read`, `--allow-env`, etc., when the feature requires them.
 - Store secrets in an ignored `.env` file and read them through `Deno.env.get` inside a small `config.ts`, never hardcode credentials.
+
+## Documentation & Research Guidelines
+- Always use context7 to get official documentation when working on tasks or researching implementation details.
+- Prioritize official docs over community resources to ensure accuracy and up-to-date information.
