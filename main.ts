@@ -1,9 +1,11 @@
 import { Hono } from "hono";
+import { buildGreeting } from "./lib/greetings.ts";
 
 const app = new Hono();
 
 app.get("/", (c) => {
-  return c.text("Hello Hono!");
+  const name = c.req.query("name");
+  return c.text(buildGreeting(name));
 });
 
 app.get("/api/github/:owner", async (c) => {
@@ -55,7 +57,15 @@ app.get("/api/github/:owner/repos", async (c) => {
     }
 
     const data = new TextDecoder().decode(stdout);
-    return c.json(JSON.parse(data));
+    const repos = JSON.parse(data);
+
+    // Remove owner property from each repo
+    const cleanedRepos = repos.map((repo: Record<string, unknown>) => {
+      const { owner: _owner, ...repoWithoutOwner } = repo;
+      return repoWithoutOwner;
+    });
+
+    return c.json(cleanedRepos);
   } catch (error) {
     return c.json({
       error: "Failed to execute GitHub CLI",

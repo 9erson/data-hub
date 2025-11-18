@@ -23,6 +23,14 @@
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@^4.10.6"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@types/jest@30",
+        "npm:jest@^30.2.0",
+        "npm:ts-jest@^29.4.5",
+        "npm:typescript@^5.9.3"
+      ]
+    }
   }
 }
